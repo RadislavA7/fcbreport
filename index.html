@@ -1712,7 +1712,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     var method = opts.method || "GET";
 
     return ghSend(url, method, opts.body).then(function (r) {
-      if (r.status === 404 && method === "GET") { ghDiag("404 на " + path); return null; }
+      if (r.status === 404 && method === "GET") return null;
       if (r.status === 204) return {};
       return r.text().then(function (txt) {
         var data = null;
