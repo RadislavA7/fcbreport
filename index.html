@@ -1,0 +1,1977 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Реестр отчёта</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#eef1f5; --surface:#ffffff; --surface-2:#f6f8fa; --line:#dce2ea;
+  --line-strong:#c3cdd9; --ink:#171d26; --muted:#67717f;
+  --accent:#1f5f94; --accent-soft:#e3edf6;
+  --done:#16794c; --done-soft:#dff0e6;
+  --wip:#a96410; --wip-soft:#fbeeda;
+  --danger:#a53527; --danger-soft:#f8e4e1;
+  --focus:#2c86c9; --shadow:0 1px 2px rgba(23,29,38,.06), 0 8px 24px -16px rgba(23,29,38,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161b; --surface:#1a1f26; --surface-2:#212832; --line:#2c3540;
+    --line-strong:#3b4653; --ink:#e4e9ef; --muted:#8b95a2;
+    --accent:#7bb4e3; --accent-soft:#1e2c38;
+    --done:#5bc08e; --done-soft:#172a21;
+    --wip:#e0a44e; --wip-soft:#2e2417;
+    --danger:#e08477; --danger-soft:#33201d;
+    --focus:#7bb4e3; --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+  .btn.primary{color:var(--ground)}
+}
+:root[data-theme="dark"]{
+  --ground:#12161b; --surface:#1a1f26; --surface-2:#212832; --line:#2c3540;
+  --line-strong:#3b4653; --ink:#e4e9ef; --muted:#8b95a2;
+  --accent:#7bb4e3; --accent-soft:#1e2c38;
+  --done:#5bc08e; --done-soft:#172a21;
+  --wip:#e0a44e; --wip-soft:#2e2417;
+  --danger:#e08477; --danger-soft:#33201d;
+  --focus:#7bb4e3; --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"Golos Text","Segoe UI",system-ui,sans-serif;
+  font-size:15px; line-height:1.5;
+  padding:20px 20px 64px;
+}
+h1,h2,h3{text-wrap:balance; margin:0}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:4px}
+.mono{font-family:"IBM Plex Mono","Cascadia Mono",Consolas,monospace; font-variant-numeric:tabular-nums}
+
+.wrap{max-width:1360px; margin:0 auto}
+
+/* ---------- шапка ---------- */
+.top{display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px 22px; margin-bottom:18px}
+.brand h1{font-size:23px; font-weight:600; letter-spacing:-.01em}
+.brand p{margin:2px 0 0; color:var(--muted); font-size:13px}
+.top-right{margin-left:auto; display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+
+.field{display:flex; align-items:center; gap:7px}
+.field label{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
+select.month, input.text-in{
+  background:var(--surface); border:1px solid var(--line-strong); border-radius:7px;
+  padding:7px 10px; min-width:0;
+}
+select.month{font-weight:500}
+
+.btn{
+  background:var(--surface); border:1px solid var(--line-strong); border-radius:7px;
+  padding:7px 12px; cursor:pointer; white-space:nowrap;
+  transition:background .12s ease, border-color .12s ease;
+}
+.btn:hover{background:var(--surface-2); border-color:var(--accent)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500}
+:root[data-theme="dark"] .btn.primary{color:var(--ground)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent; background:transparent; color:var(--muted); padding:6px 9px}
+.btn.ghost:hover{background:var(--surface-2); color:var(--ink); border-color:var(--line)}
+.btn.danger{color:var(--danger); border-color:var(--line-strong)}
+.btn.danger:hover{background:var(--danger-soft); border-color:var(--danger)}
+.btn[disabled]{opacity:.45; cursor:default}
+.btn[disabled]:hover{background:var(--surface); border-color:var(--line-strong)}
+
+.tally{display:flex; gap:8px; align-items:center}
+.pill-count{
+  display:inline-flex; align-items:baseline; gap:6px; padding:5px 11px; border-radius:999px;
+  font-size:13px; font-weight:500;
+}
+.pill-count b{font-size:15px}
+.pill-count.d{background:var(--done-soft); color:var(--done)}
+.pill-count.w{background:var(--wip-soft); color:var(--wip)}
+
+.notice{
+  border:1px solid var(--line-strong); background:var(--surface-2); border-left:3px solid var(--wip);
+  padding:9px 13px; border-radius:6px; font-size:13.5px; margin-bottom:16px; color:var(--muted);
+}
+.notice b{color:var(--ink)}
+
+/* ---------- верстак ---------- */
+.workbench{display:grid; grid-template-columns:minmax(0,1.32fr) minmax(0,1fr); gap:22px; align-items:start}
+@keyframes flash{from{background:var(--accent-soft)} to{background:transparent}}
+.row.just-added{animation:flash 1.6s ease-out}
+@media (max-width:1020px){ .workbench{grid-template-columns:minmax(0,1fr)} }
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow)}
+.panel-head{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:13px 16px; border-bottom:1px solid var(--line);
+}
+.panel-head h2{font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.09em; color:var(--muted)}
+.panel-head .spacer{margin-left:auto}
+.filters{display:flex; gap:4px; background:var(--surface-2); padding:3px; border-radius:8px}
+.filters button{
+  border:0; background:transparent; border-radius:6px; padding:4px 11px; cursor:pointer;
+  font-size:13px; color:var(--muted);
+}
+.filters button[aria-pressed="true"]{background:var(--surface); color:var(--ink); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,.08)}
+input.search{
+  background:var(--surface-2); border:1px solid transparent; border-radius:7px; padding:6px 10px;
+  width:170px;
+}
+input.search:focus{background:var(--surface); border-color:var(--line-strong)}
+
+/* ---------- разделы и строки ---------- */
+/* Каждый раздел — отдельная карточка с цветным корешком слева:
+   зелёный «Готово», янтарный «В процессе», полоски — регулярные. */
+.ledger-col{display:flex; flex-direction:column; gap:14px; min-width:0}
+#ledger{display:flex; flex-direction:column; gap:14px}
+.sect{
+  position:relative; padding-left:6px; overflow:hidden;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:11px; box-shadow:var(--shadow);
+}
+.sect::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px}
+.sect.s-done::before{background:var(--done)}
+.sect.s-wip::before{background:var(--wip)}
+.sect.s-done.s-rep::before{
+  background:repeating-linear-gradient(135deg, var(--done) 0 5px, var(--done-soft) 5px 10px);
+}
+.sect.s-wip.s-rep::before{
+  background:repeating-linear-gradient(135deg, var(--wip) 0 5px, var(--wip-soft) 5px 10px);
+}
+.sect-head{
+  display:flex; align-items:center; gap:10px; padding:11px 16px;
+  position:sticky; top:0; z-index:2; border-bottom:1px solid var(--line);
+  cursor:pointer; user-select:none;
+}
+.sect-head .fold{
+  font-size:11px; width:14px; flex:none; opacity:.7;
+  transition:transform .15s ease; transform:rotate(90deg);
+}
+.sect.folded .sect-head{border-bottom:0}
+.sect.folded .sect-head .fold{transform:rotate(0deg)}
+.sect.s-done .sect-head{background:var(--done-soft)}
+.sect.s-wip .sect-head{background:var(--wip-soft)}
+.sect.s-done h3{color:var(--done)}
+.sect.s-wip h3{color:var(--wip)}
+.sect-head h3{font-size:14.5px; font-weight:600; letter-spacing:-.01em}
+.sect-head .rep{
+  font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  background:var(--surface); border-radius:4px; padding:2px 7px; opacity:.9;
+}
+.sect.s-done .rep{color:var(--done)}
+.sect.s-wip .rep{color:var(--wip)}
+.sect-head .n{
+  margin-left:auto; font-size:13px; font-variant-numeric:tabular-nums;
+  background:var(--surface); border-radius:999px; padding:2px 9px;
+}
+
+.row{
+  display:grid; grid-template-columns:34px auto minmax(0,1fr) auto; gap:10px;
+  align-items:start; padding:7px 16px 7px 10px; border-top:1px solid var(--line);
+}
+.sect-head + .row{border-top:0}
+.row:hover{background:var(--surface-2)}
+.row.hidden{display:none}
+.row .num{
+  font-size:13px; color:var(--muted); text-align:right; padding-top:7px;
+  font-family:"IBM Plex Mono",Consolas,monospace; font-variant-numeric:tabular-nums;
+}
+.marks{display:flex; gap:4px; padding-top:3px; flex:none}
+.mk{
+  border:1px solid var(--line-strong); background:var(--surface); border-radius:6px;
+  cursor:pointer; padding:2px 6px; font-size:12.5px; line-height:1.6; min-width:26px; text-align:center;
+}
+.mk:hover{border-color:var(--accent)}
+.mk.who{font-weight:600; color:var(--accent); background:var(--accent-soft); border-color:transparent}
+.mk.st.d{background:var(--done-soft); border-color:transparent}
+.mk.st.w{background:var(--wip-soft); border-color:transparent}
+.mk.rep[aria-pressed="false"]{opacity:.32; filter:grayscale(1)}
+
+.body{min-width:0; display:flex; flex-direction:column; gap:5px}
+textarea.txt{
+  width:100%; border:1px solid transparent; background:transparent; border-radius:6px;
+  padding:5px 7px; resize:none; overflow:hidden; line-height:1.45; min-height:32px;
+}
+textarea.txt:hover{border-color:var(--line)}
+textarea.txt:focus{border-color:var(--accent); background:var(--surface); outline:none}
+textarea.txt{font-weight:500}
+textarea.cmt{
+  width:100%; border:1px solid transparent; background:transparent; border-radius:6px;
+  border-left:2px solid var(--line-strong); padding:3px 7px; resize:none; overflow:hidden;
+  font-size:13.5px; line-height:1.45; color:var(--muted); min-height:26px; margin-left:7px;
+  width:calc(100% - 7px);
+}
+textarea.cmt:hover{border-color:var(--line); border-left-color:var(--accent)}
+textarea.cmt:focus{border-color:var(--accent); background:var(--surface); color:var(--ink); outline:none}
+.chips{display:flex; flex-wrap:wrap; gap:5px; align-items:center; padding-left:7px}
+.chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px; padding:2px 8px;
+  border-radius:999px; background:var(--surface-2); border:1px solid var(--line);
+  color:var(--muted); cursor:pointer;
+}
+.chip:hover{border-color:var(--accent); color:var(--ink)}
+.chip.add{border-style:dashed; opacity:.75}
+.chip.done{background:var(--done-soft); border-color:transparent; color:var(--done)}
+.chip.link{background:var(--accent-soft); border-color:transparent; color:var(--accent)}
+.dates .f.link-f{gap:8px}
+.dates .f.link-f input{width:150px}
+.dates .f.link-f input.url{width:280px; font-size:12.5px}
+pre.text a{color:var(--accent); text-decoration:underline; text-underline-offset:2px}
+.dates{display:flex; flex-wrap:wrap; gap:8px 14px; padding:6px 7px 2px}
+.dates .f.wide{flex-basis:100%}
+.dates .f.wide input{width:262px}
+.chip.today{white-space:nowrap; opacity:1; border-color:var(--line-strong)}
+.dates .f{display:flex; align-items:center; gap:6px}
+.dates label{font-size:12px; color:var(--muted); white-space:nowrap}
+.dates input{
+  background:var(--surface-2); border:1px solid var(--line-strong); border-radius:6px;
+  padding:4px 8px; font-size:13px; width:210px; max-width:46vw;
+}
+
+.acts{display:flex; gap:2px; padding-top:4px; opacity:0; transition:opacity .12s ease}
+.row:hover .acts, .row:focus-within .acts{opacity:1}
+.acts button{
+  border:1px solid transparent; background:transparent; border-radius:6px; cursor:pointer;
+  width:26px; height:26px; color:var(--muted); font-size:13px; line-height:1;
+}
+.acts button:hover{background:var(--surface); border-color:var(--line-strong); color:var(--ink)}
+.acts button.del:hover{color:var(--danger); border-color:var(--danger)}
+.acts button.more{display:none}
+@media (max-width:640px){ .acts button.more{display:inline-block} }
+.confirm{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--danger); padding-top:6px; white-space:nowrap}
+.confirm button{border:1px solid var(--line-strong); background:var(--surface); border-radius:6px; padding:2px 9px; cursor:pointer; font-size:12.5px}
+.confirm button.yes{color:var(--danger); border-color:var(--danger)}
+
+.sect-foot{padding:6px 16px 13px}
+.empty{padding:26px 16px; color:var(--muted); text-align:center; font-size:14px}
+
+/* ---------- панель сообщений ---------- */
+.msgs{position:sticky; top:16px; display:flex; flex-direction:column; gap:14px}
+.msg-bar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:0 2px}
+.switch{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; cursor:pointer; white-space:nowrap}
+.msg-bar .hint{margin-left:auto; text-align:right}
+pre.text b{font-weight:600}
+pre.text u{text-decoration:underline; text-underline-offset:3px}
+@media (max-width:1020px){ .msgs{position:static} }
+.part{background:var(--surface); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow); overflow:hidden}
+.part-head{display:flex; align-items:center; gap:12px; padding:11px 14px 9px}
+.part-head h4{margin:0; font-size:13px; font-weight:600}
+.part-head .cnt{margin-left:auto; font-size:12.5px; color:var(--muted)}
+.gauge{height:4px; background:var(--surface-2); position:relative; margin:0 14px; border-radius:2px; overflow:hidden}
+.gauge i{position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:2px}
+.gauge i.warn{background:var(--wip)}
+.gauge i.over{background:var(--danger)}
+pre.text{
+  margin:11px 0 0; padding:0 14px 12px; max-height:300px; overflow:auto;
+  font-family:"IBM Plex Mono","Cascadia Mono",Consolas,monospace; font-size:12.5px; line-height:1.55;
+  white-space:pre-wrap; word-break:break-word; color:var(--ink);
+}
+.part-foot{display:flex; gap:8px; align-items:center; padding:10px 14px; border-top:1px solid var(--line); background:var(--surface-2)}
+.copied{font-size:12.5px; color:var(--done); opacity:0; transition:opacity .15s ease}
+.copied.on{opacity:1}
+.hint{font-size:12.5px; color:var(--muted); line-height:1.5; padding:0 2px}
+.hint code{font-family:"IBM Plex Mono",Consolas,monospace; font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:4px}
+
+dialog{
+  border:1px solid var(--line-strong); border-radius:12px; background:var(--surface); color:var(--ink);
+  padding:0; box-shadow:0 24px 60px -20px rgba(0,0,0,.5); max-width:min(420px,92vw);
+}
+dialog::backdrop{background:rgba(10,14,19,.5)}
+.dlg-body{padding:18px 20px}
+.dlg-body h3{font-size:16px; margin-bottom:12px}
+.dlg-body p{margin:0 0 14px; color:var(--muted); font-size:14px}
+.dlg-row{display:flex; gap:10px; align-items:center; margin-bottom:12px}
+.dlg-row select,.dlg-row input[type=text]{
+  background:var(--surface-2); border:1px solid var(--line-strong); border-radius:7px; padding:7px 10px; flex:1;
+}
+.dlg-check{display:flex; gap:8px; align-items:flex-start; font-size:13.5px; color:var(--muted); margin-bottom:16px}
+dialog#dlg-task, dialog#dlg-prefs{max-width:min(520px,94vw)}
+dialog#dlg-task .dlg-body{max-height:min(70vh,620px); overflow-y:auto}
+.dlg-label{
+  display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--muted); margin:0 0 5px;
+}
+.dlg-input{
+  width:100%; background:var(--surface-2); border:1px solid var(--line-strong);
+  border-radius:7px; padding:8px 10px; margin-bottom:14px; font-family:inherit;
+}
+textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
+.dlg-input:focus{background:var(--surface); border-color:var(--accent); outline:none}
+.dlg-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 12px}
+.dlg-err{color:var(--danger); font-size:13px; margin:-9px 0 12px}
+.seg{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap}
+.seg button{
+  flex:1 1 auto; background:var(--surface-2); border:1px solid var(--line-strong);
+  border-radius:7px; padding:8px 10px; cursor:pointer; font-size:13.5px; white-space:nowrap;
+}
+.seg button:hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{
+  background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600;
+}
+@media (max-width:640px){
+  .dlg-grid{grid-template-columns:1fr}
+  .seg button{flex:1 1 100%}
+}
+.dlg-foot{display:flex; gap:9px; justify-content:flex-end; padding:13px 20px; border-top:1px solid var(--line); background:var(--surface-2)}
+
+/* ---------- телефон ---------- */
+/* На тач-экране нет наведения, поэтому действия строки видны всегда. */
+@media (hover: none){
+  .acts{opacity:1}
+  .acts button{width:32px; height:32px; font-size:15px}
+  .mk{padding:5px 9px; font-size:14px; min-width:32px}
+  .filters button{padding:7px 13px}
+}
+@media (max-width:640px){
+  body{padding:12px 10px 40px; font-size:14px}
+  .brand h1{font-size:20px}
+  .brand p{font-size:12.5px}
+  .top{gap:12px}
+  .top-right{margin-left:0; width:100%; gap:8px}
+  .top-right .field{flex:1 1 100%}
+  .top-right select.month{flex:1}
+  .tally{width:100%}
+
+  .panel{border-radius:9px}
+  .panel-head{padding:10px 12px; gap:8px}
+  input.search{width:100%; flex:1 1 100%}
+  #add-top{flex:1 1 100%; order:3}
+  .ledger-col, #ledger{gap:10px}
+  .sect-head{padding:10px 12px}
+  .sect-foot{padding:6px 12px 12px}
+
+  /* номер, пометки и действия — одной строкой; текст задачи — во всю ширину */
+  .row{
+    grid-template-columns:auto auto 1fr;
+    grid-template-areas:"num marks acts" "body body body";
+    gap:6px 8px; padding:9px 12px;
+  }
+  .row .num{grid-area:num; text-align:left; padding-top:6px}
+  .marks{grid-area:marks; padding-top:0}
+  .acts, .confirm{grid-area:acts; justify-self:end; padding-top:0}
+  .body{grid-area:body}
+
+  textarea.txt{padding:4px 6px; font-size:15px}
+  textarea.cmt{font-size:14px; margin-left:0; width:100%}
+  /* «+ даты» и «+ комментарий» съедали строку у каждой задачи —
+     на телефоне их заменяет кнопка ⋯ в правом верхнем углу строки */
+  .chips{padding-left:0}
+  .chips .chip.add{display:none}
+  .only-wide{display:none}
+  .pill-count{padding:4px 9px; font-size:12.5px}
+  .pill-count b{font-size:14px}
+  .dates{padding:8px 0 2px; gap:10px}
+  .dates .f, .dates .f.wide, .dates .f.link-f{flex:1 1 100%; flex-wrap:wrap; gap:5px}
+  .dates label{flex:1 1 100%}
+  .dates input,
+  .dates .f.wide input,
+  .dates .f.link-f input,
+  .dates .f.link-f input.url{width:100%; max-width:none; font-size:16px}
+  .dates .f.wide{gap:5px}
+  .chip.today{font-size:13px; padding:6px 10px}
+
+  .msg-bar{gap:6px}
+  .msg-bar .hint{margin-left:0; text-align:left; flex:1 1 100%}
+  .part-head{padding:10px 12px 8px}
+  .gauge{margin:0 12px}
+  pre.text{font-size:12px; max-height:240px; padding:0 12px 10px}
+  .part-foot{padding:9px 12px}
+}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <h1>Реестр отчёта</h1>
+      <p><span class="only-wide">Слева — задачи, справа — готовый текст для Telegram.
+        Нумерация и разбивка считаются сами.<br></span>
+        <b>Р</b> — ФЦБ-Регион · <b>И</b> — ФЦБ-Инвест · <b>О</b> — общие задачи</p>
+    </div>
+    <div class="top-right">
+      <div class="tally">
+        <span class="pill-count d"><b id="cnt-done">0</b> готово</span>
+        <span class="pill-count w"><b id="cnt-wip">0</b> в процессе</span>
+      </div>
+      <div class="field">
+        <label for="month">Месяц</label>
+        <select class="month" id="month"></select>
+      </div>
+      <button class="btn" id="close-month">Закрыть месяц</button>
+      <button class="btn" id="new-month">+ Месяц</button>
+      <button class="btn ghost" id="del-month" title="Удалить текущий месяц">✕</button>
+    </div>
+  </div>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="workbench">
+    <div class="ledger-col">
+    <div class="panel" id="ledger-panel">
+      <div class="panel-head">
+        <h2>Задачи</h2>
+        <button class="btn primary" id="add-top">+ Задача</button>
+        <button class="btn" id="prefs" title="Настройки списка" aria-label="Настройки списка">⚙</button>
+        <div class="spacer"></div>
+        <div class="filters" role="group" aria-label="Группа компаний">
+          <button data-who="" aria-pressed="true">Все</button>
+          <button data-who="Р" aria-pressed="false" title="ФЦБ-Регион">Р</button>
+          <button data-who="О" aria-pressed="false" title="Общие задачи">О</button>
+          <button data-who="И" aria-pressed="false" title="ФЦБ-Инвест">И</button>
+        </div>
+        <input class="search" id="search" type="search" placeholder="Поиск по тексту" aria-label="Поиск по тексту">
+      </div>
+    </div>
+    <div id="ledger"><div class="empty">Загружаю задачи…</div></div>
+    </div>
+
+    <div class="msgs">
+      <div class="msg-bar">
+        <label class="switch">
+          <input type="checkbox" id="bold-toggle" checked>
+          <span>Жирные названия, подчёркнутые разделы</span>
+        </label>
+        <span class="hint" id="bold-note">Считается длина готового сообщения: жирный и адреса ссылок места не занимают</span>
+      </div>
+      <div id="parts"></div>
+      <div class="part">
+        <div class="part-foot" style="border-top:0; justify-content:space-between">
+          <span class="hint">Резервная копия в формате <code>tasks.txt</code></span>
+          <button class="btn" id="copy-src">Скопировать</button>
+        </div>
+      </div>
+      <p class="hint">Лимит Telegram — 4096 символов на сообщение. Части выравниваются по длине, разделы при переносе продолжаются с той же нумерации.</p>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg-month">
+  <form method="dialog">
+    <div class="dlg-body">
+      <h3>Новый месяц</h3>
+      <div class="dlg-row">
+        <select id="nm-month"></select>
+        <input type="text" id="nm-year" inputmode="numeric" style="max-width:90px" aria-label="Год">
+      </div>
+      <label class="dlg-check">
+        <input type="checkbox" id="nm-carry" checked>
+        <span>Перенести незавершённые разовые задачи (те, что остались 🟠)</span>
+      </label>
+      <label class="dlg-check">
+        <input type="checkbox" id="nm-repeat" checked>
+        <span>Повторить регулярные задачи 🔄 — вернутся в «В процессе», отметки о выполнении очистятся</span>
+      </label>
+      <label class="dlg-check">
+        <input type="checkbox" id="nm-shift" checked>
+        <span>Сдвинуть даты 📆 и ↔️ на новый месяц (25.09-28.09 → 25.10-28.10)</span>
+      </label>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Отмена</button>
+      <button class="btn primary" value="ok" id="nm-ok">Создать</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-task">
+  <div class="dlg-body">
+    <h3>Новая задача</h3>
+
+    <label class="dlg-label" for="nt-text">Название</label>
+    <textarea id="nt-text" class="dlg-input" rows="2" placeholder="Что нужно сделать"></textarea>
+    <p class="dlg-err" id="nt-err" hidden>Впишите название задачи.</p>
+
+    <label class="dlg-label">Группа компаний</label>
+    <div class="seg" id="nt-who" role="group" aria-label="Группа компаний">
+      <button type="button" data-v="Р" aria-pressed="true">Р · ФЦБ-Регион</button>
+      <button type="button" data-v="О" aria-pressed="false">О · общие</button>
+      <button type="button" data-v="И" aria-pressed="false">И · ФЦБ-Инвест</button>
+    </div>
+
+    <label class="dlg-label">Статус</label>
+    <div class="seg" id="nt-status" role="group" aria-label="Статус">
+      <button type="button" data-v="wip" aria-pressed="true">🟠 В процессе</button>
+      <button type="button" data-v="done" aria-pressed="false">🟢 Готово</button>
+    </div>
+
+    <label class="dlg-check">
+      <input type="checkbox" id="nt-rep">
+      <span>🔄 Регулярная / ежедневная задача</span>
+    </label>
+
+    <label class="dlg-label" for="nt-comment">Комментарий</label>
+    <input type="text" id="nt-comment" class="dlg-input" placeholder="уйдёт в скобках после названия">
+
+    <div class="dlg-grid">
+      <div>
+        <label class="dlg-label" for="nt-due">📆 Выполнить до</label>
+        <input type="text" id="nt-due" class="dlg-input" placeholder="7.09 или 9.09; 16.09">
+      </div>
+      <div>
+        <label class="dlg-label" for="nt-dates">↔️ В эти даты</label>
+        <input type="text" id="nt-dates" class="dlg-input" placeholder="25.09-28.09">
+      </div>
+      <div>
+        <label class="dlg-label" for="nt-did">✅ Выполнено</label>
+        <input type="text" id="nt-did" class="dlg-input" placeholder="2.09, 4.09">
+      </div>
+      <div>
+        <label class="dlg-label" for="nt-ltext">🔗 Подпись ссылки</label>
+        <input type="text" id="nt-ltext" class="dlg-input" placeholder="Заявка в ТП">
+      </div>
+    </div>
+
+    <label class="dlg-label" for="nt-link">Адрес ссылки</label>
+    <input type="url" id="nt-link" class="dlg-input" placeholder="https://crm.fcb.expert/...">
+  </div>
+  <div class="dlg-foot">
+    <button class="btn" id="nt-cancel" type="button">Отмена</button>
+    <button class="btn primary" id="nt-ok" type="button">Добавить</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-prefs">
+  <div class="dlg-body">
+    <h3>Настройки списка</h3>
+    <p>Порядок меняется только на этом экране. В сообщении разделы всегда
+       идут в порядке отчёта, чтобы коллеги видели привычную структуру.</p>
+
+    <label class="dlg-label">Порядок разделов</label>
+    <div class="seg" id="pf-order" role="group" aria-label="Порядок разделов">
+      <button type="button" data-v="todo" aria-pressed="true">Сначала невыполненные</button>
+      <button type="button" data-v="report" aria-pressed="false">Как в отчёте</button>
+    </div>
+
+    <label class="dlg-check">
+      <input type="checkbox" id="pf-fold-done">
+      <span>Свернуть разделы «Готово» — останутся только заголовки со счётчиком</span>
+    </label>
+    <label class="dlg-check">
+      <input type="checkbox" id="pf-hide-empty">
+      <span>Скрывать пустые разделы</span>
+    </label>
+    <p class="hint">Любой раздел сворачивается и щелчком по его заголовку.</p>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn primary" id="pf-ok" type="button">Готово</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-confirm">
+  <form method="dialog">
+    <div class="dlg-body">
+      <h3 id="cf-title">Удалить?</h3>
+      <p id="cf-text"></p>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn" value="cancel">Отмена</button>
+      <button class="btn danger" value="ok">Удалить</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var LIMIT = 4096, RESERVE = 170;   // запас под заголовок части и строку итогов
+  var MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль",
+                "Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+  var SECTIONS = [
+    { status:"done", repeat:false, title:"Готово" },
+    { status:"done", repeat:true,  title:"Готово + Ежедневная / Регулярная задача" },
+    { status:"wip",  repeat:false, title:"В процессе" },
+    { status:"wip",  repeat:true,  title:"В процессе + Ежедневная / Регулярная задача" }
+  ];
+  var MARK = { "done|false":"🟢", "done|true":"🔄🟢", "wip|false":"🟠", "wip|true":"🔄🟠" };
+  var GROUPS = ["Р", "О", "И"];   // группа компаний, к которой относится задача
+  var GROUP_NAMES = { "Р": "ФЦБ-Регион", "О": "общие", "И": "ФЦБ-Инвест" };
+  var LEGEND = "Статусы:\n🟢 - Готово\n🟠 - В процессе\n📆 - Выполнить \"До\"\n" +
+               "🔄 - Ежедневная / Регулярная задача\n↔️ - Выполнить в эти даты";
+
+  var db = null, unsub = null, saveTimer = null, lastWritten = "";
+  var state = { docId:"", month:"", tasks:[] };
+  var months = [];
+  var filterWho = "", query = "";
+  var openDates = {}, openComment = {}, confirmDel = {};
+  var bold = true;
+  try { bold = localStorage.getItem("tg-report:bold") !== "0"; } catch (e) {}
+
+  /* Настройки экрана. На текст сообщения не влияют: там разделы всегда
+     идут в порядке отчёта. Хранятся у пользователя в браузере. */
+  var prefs = { order: "todo", hideEmpty: false, folded: {} };
+  try {
+    var raw = localStorage.getItem("tg-report:prefs");
+    if (raw) {
+      var saved = JSON.parse(raw);
+      prefs.order = saved.order === "report" ? "report" : "todo";
+      prefs.hideEmpty = !!saved.hideEmpty;
+      prefs.folded = saved.folded || {};
+    }
+  } catch (e) {}
+
+  function savePrefs() {
+    try { localStorage.setItem("tg-report:prefs", JSON.stringify(prefs)); } catch (e) {}
+  }
+
+  function keyOf(s) { return s.status + (s.repeat ? "*" : ""); }
+
+  /* Порядок разделов на экране. «Сначала невыполненные» — это задачник:
+     сверху то, что делать, готовое уезжает вниз. */
+  function screenSections() {
+    if (prefs.order === "report") return SECTIONS.slice();
+    var todo = [], done = [];
+    SECTIONS.forEach(function (s) { (s.status === "wip" ? todo : done).push(s); });
+    return todo.concat(done);
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* Снимки из хранилища приходят замороженными — правим только свои копии. */
+  function thaw(tasks) {
+    return (tasks || []).map(function (t) {
+      return {
+        id: t.id, text: t.text || "", who: t.who || "Р",
+        status: t.status === "done" ? "done" : "wip",
+        repeat: !!t.repeat, due: t.due || "", dates: t.dates || "",
+        did: t.did || "", comment: t.comment || "",
+        link: t.link || "", linkText: t.linkText || ""
+      };
+    });
+  }
+
+  /* ------------------------------------------------ сборка текста */
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  /* Строка сразу в двух видах: md — то, что ложится в буфер текстом
+     (Telegram превращает **...** в жирный при отправке), html — то, что
+     вставляется с настоящим форматированием. Жирные — только номер и
+     название задачи; пометки, даты и комментарий остаются тонкими. */
+  function renderLine(t, i) {
+    var head = ["(" + t.who + ")"];
+    if (t.due) head.push("📆(" + t.due + ")");
+    if (t.dates) head.push("↔️(" + t.dates + ")");
+    head.push(MARK[t.status + "|" + !!t.repeat]);
+    var lead = head.join(" ") + " ";
+    var name = i + ". " + t.text;
+
+    /* Хвост собираем по кусочкам: у ссылки в каждом варианте свой вид,
+       а plain — то, что реально увидит Telegram, по нему считаем лимит. */
+    var md = "", html = "", plain = "";
+    var add = function (m, h, p) { md += m; html += h; plain += p; };
+    if (t.comment) add(" (" + t.comment + ")", " (" + esc(t.comment) + ")", " (" + t.comment + ")");
+    if (t.link) {
+      var label = t.linkText || "ссылка";
+      add(" ([" + label + "](" + t.link + "))",
+          ' (<a href="' + esc(t.link) + '">' + esc(label) + "</a>)",
+          " (" + label + ")");
+    }
+    if (t.did) add(" (" + t.did + ")", " (" + esc(t.did) + ")", " (" + t.did + ")");
+
+    return bold
+      ? { md: lead + "**" + name + "**" + md,
+          html: esc(lead) + "<b>" + esc(name) + "</b>" + html,
+          plain: lead + name + plain }
+      : { md: lead + name + md, html: esc(lead + name) + html, plain: lead + name + plain };
+  }
+
+  function makeBlocks(tasks) {
+    var out = [];
+    SECTIONS.forEach(function (s) {
+      var rows = tasks.filter(function (t) {
+        return t.status === s.status && !!t.repeat === s.repeat;
+      });
+      if (rows.length) {
+        out.push({ title: s.title, rows: rows.map(function (t, i) { return renderLine(t, i + 1); }) });
+      }
+    });
+    return out;
+  }
+
+  function line(text) { return { md: text, html: esc(text), plain: text }; }
+
+  /* Заголовок раздела — подчёркнутый. Только в html-варианте: текстовая
+     разметка __…__ в клиентах Telegram даёт курсив, а не подчёркивание,
+     поэтому в текстовом варианте заголовок остаётся без разметки. */
+  function headLine(text) {
+    return { md: text, html: bold ? "<u>" + esc(text) + "</u>" : esc(text), plain: text };
+  }
+
+  function splitBlocks(blocks, budget) {
+    var chunks = [], cur = [], curLen = 0;
+    function size(arr) {
+      var n = 0;
+      for (var i = 0; i < arr.length; i++) n += arr[i].plain.length + 1;
+      return n;
+    }
+    function join(arr, key) {
+      var out = [];
+      for (var i = 0; i < arr.length; i++) out.push(arr[i][key]);
+      return out.join("\n").trim();
+    }
+    function flush() {
+      if (cur.length) {
+        chunks.push({ md: join(cur, "md"), html: join(cur, "html"), plain: join(cur, "plain") });
+        cur = []; curLen = 0;
+      }
+    }
+    for (var b = 0; b < blocks.length; b++) {
+      var rows = blocks[b].rows, i = 0, cont = false;
+      while (i < rows.length) {
+        var head = blocks[b].title + (cont ? " (продолжение)" : "");
+        var pre = cur.length ? [line(""), headLine(head)] : [headLine(head)];
+        if (cur.length && curLen + size(pre) + rows[i].plain.length + 1 > budget) { flush(); continue; }
+        cur = cur.concat(pre);
+        curLen += size(pre);
+        var placed = 0;
+        while (i < rows.length && curLen + rows[i].plain.length + 1 <= budget) {
+          cur.push(rows[i]); curLen += rows[i].plain.length + 1; i++; placed++;
+        }
+        if (i < rows.length) {
+          if (placed === 0) { cur.push(rows[i]); i++; }
+          flush();
+          cont = true;
+        }
+      }
+    }
+    flush();
+    return chunks;
+  }
+
+  function buildParts(month, tasks) {
+    var blocks = makeBlocks(tasks);
+    if (!blocks.length) return [];
+    var longest = LEGEND.length;
+    blocks.forEach(function (b) {
+      b.rows.forEach(function (r) { if (r.plain.length > longest) longest = r.plain.length; });
+    });
+    var hi = LIMIT - RESERVE, lo = longest + 60;
+    if (lo > hi) lo = hi;
+    var need = splitBlocks(blocks, hi).length;
+    while (lo < hi) {                       // ужимаем «полку» — части выходят ровными
+      var mid = Math.floor((lo + hi) / 2);
+      if (splitBlocks(blocks, mid).length <= need) hi = mid; else lo = mid + 1;
+    }
+    var chunks = splitBlocks(blocks, hi);
+    var last = chunks[chunks.length - 1];
+    if (last && last.plain.length + LEGEND.length + RESERVE + 2 <= LIMIT) {
+      last.md += "\n\n" + LEGEND;
+      last.html += "\n\n" + esc(LEGEND);
+      last.plain += "\n\n" + LEGEND;
+    } else {
+      chunks.push(line(LEGEND));
+    }
+    var totals = summaryLine(tasks);
+    return chunks.map(function (body, i) {
+      var title = chunks.length === 1 ? month : month + " - часть " + (i + 1) + "/" + chunks.length;
+      var mdHead = bold ? "**" + title + "**" : title;
+      var htmlHead = bold ? "<b>" + esc(title) + "</b>" : esc(title);
+      var plainHead = title;
+      if (i === 0 && totals) {          // итоги — тонким, под жирным заголовком
+        mdHead += "\n" + totals;
+        htmlHead += "\n" + esc(totals);
+        plainHead += "\n" + totals;
+      }
+      return {
+        md: mdHead + "\n\n" + body.md,
+        html: htmlHead + "\n\n" + body.html,
+        plain: plainHead + "\n\n" + body.plain
+      };
+    });
+  }
+
+  /* Итоги месяца — одной строкой под заголовком первого сообщения. */
+  function summaryLine(tasks) {
+    if (!tasks.length) return "";
+    var done = 0, rep = 0, byGroup = {};
+    tasks.forEach(function (t) {
+      if (t.status === "done") done++;
+      if (t.repeat) rep++;
+      byGroup[t.who] = (byGroup[t.who] || 0) + 1;
+    });
+    var bits = ["Готово " + done + " из " + tasks.length];
+    if (rep) bits.push("регулярных " + rep);
+    GROUPS.forEach(function (g) {
+      if (byGroup[g]) bits.push(GROUP_NAMES[g] + " " + byGroup[g]);
+    });
+    return bits.join(" · ");
+  }
+
+  function asSource(month, tasks) {
+    var lines = ["месяц: " + month, ""];
+    SECTIONS.forEach(function (s) {
+      var rows = tasks.filter(function (t) {
+        return t.status === s.status && !!t.repeat === s.repeat;
+      });
+      if (!rows.length) return;
+      lines.push("# " + s.title);
+      rows.forEach(function (t) {
+        var tags = "";
+        if (t.due) tags += "@до(" + t.due + ") ";
+        if (t.dates) tags += "@даты(" + t.dates + ") ";
+        if (t.did) tags += "@сделано(" + t.did + ") ";
+        if (t.link) tags += "@ссылка(" + (t.linkText || "ссылка") + "|" + t.link + ") ";
+        lines.push((t.status + (t.repeat ? "*" : "")) + "  " + t.who + "  " + tags + t.text +
+                   (t.comment ? " | " + t.comment : ""));
+      });
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
+  /* ------------------------------------------------ хранилище */
+  function markSaved(msg, bad) {
+    var n = $("notice");
+    if (!msg) { n.hidden = true; return; }
+    n.hidden = false;
+    n.innerHTML = msg;
+    n.style.borderLeftColor = bad ? "var(--danger)" : "var(--wip)";
+  }
+
+  function localKey() { return "tg-report:" + state.docId; }
+
+  function persist() {
+    var body = { month: state.month, tasks: state.tasks, updated: new Date().toISOString() };
+    lastWritten = JSON.stringify({ month: body.month, tasks: body.tasks });
+    if (db) {
+      db.doc("reports/" + state.docId).set(body).catch(function (e) {
+        markSaved("Не удалось сохранить: " + (e && e.message ? e.message : "хранилище недоступно") +
+                  ". Скопируйте резервную копию <b>tasks.txt</b>, чтобы не потерять правки.", true);
+      });
+    } else {
+      try { localStorage.setItem(localKey(), JSON.stringify(body)); } catch (e) {}
+    }
+  }
+
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 350);
+  }
+
+  function loadMonth(id) {
+    if (unsub) { unsub(); unsub = null; }
+    state.docId = id;
+    if (!db) {
+      var raw = null;
+      try { raw = localStorage.getItem(localKey()); } catch (e) {}
+      var d = raw ? JSON.parse(raw) : { month: id, tasks: [] };
+      state.month = d.month; state.tasks = thaw(d.tasks);
+      renderAll();
+      return;
+    }
+    unsub = db.doc("reports/" + id).onSnapshot(function (snap) {
+      if (snap.metadata.hasPendingWrites) return;
+      var d = snap.exists ? snap.data() : { month: id, tasks: [] };
+      var incoming = JSON.stringify({ month: d.month || id, tasks: d.tasks || [] });
+      if (incoming === lastWritten) return;
+      if (document.activeElement && document.activeElement.classList.contains("txt")) return;
+      lastWritten = incoming;
+      state.month = d.month || id;
+      state.tasks = thaw(d.tasks);
+      renderAll();
+    }, function (e) {
+      markSaved("Связь с хранилищем прервалась (" + e.code + "). Обновите страницу.", true);
+    });
+  }
+
+  function refreshMonths(selectId) {
+    if (!db) {
+      months = months.length ? months : [{ id: state.docId, month: state.month }];
+      fillMonthSelect(selectId || state.docId);
+      return Promise.resolve();
+    }
+    return db.collection("reports").get().then(function (q) {
+      months = q.docs.map(function (d) {
+        return { id: d.id, month: (d.data() && d.data().month) || d.id };
+      }).sort(function (a, b) { return a.id < b.id ? 1 : -1; });
+      fillMonthSelect(selectId);
+    });
+  }
+
+  function fillMonthSelect(selectId) {
+    var sel = $("month");
+    sel.innerHTML = "";
+    months.forEach(function (m) {
+      var o = document.createElement("option");
+      o.value = m.id; o.textContent = m.month;
+      sel.appendChild(o);
+    });
+    if (selectId) sel.value = selectId;
+    $("del-month").disabled = months.length < 2;
+  }
+
+  /* ------------------------------------------------ отрисовка */
+  function visible(t) {
+    if (filterWho && t.who !== filterWho) return false;
+    if (query && t.text.toLowerCase().indexOf(query) === -1) return false;
+    return true;
+  }
+
+  function renderAll() { renderLedger(); renderParts(); }
+
+  function renderParts() {
+    var host = $("parts");
+    var parts = buildParts(state.month || "Отчёт", state.tasks);
+    host.innerHTML = "";
+    if (!parts.length) {
+      host.innerHTML = '<div class="part"><div class="part-head"><h4>Сообщение</h4></div>' +
+                       '<pre class="text">Добавьте первую задачу — здесь появится готовый текст.</pre></div>';
+      return;
+    }
+    parts.forEach(function (part, i) {
+      var len = part.plain.length;
+      var pct = Math.min(100, Math.round(len / LIMIT * 100));
+      var cls = len > LIMIT ? "over" : (len > LIMIT * 0.9 ? "warn" : "");
+      var el = document.createElement("div");
+      el.className = "part";
+      el.innerHTML =
+        '<div class="part-head"><h4>' +
+          (parts.length === 1 ? "Сообщение" : "Часть " + (i + 1) + " из " + parts.length) +
+        '</h4><span class="cnt mono">' + len + " / " + LIMIT + '</span></div>' +
+        '<div class="gauge"><i class="' + cls + '" style="width:' + pct + '%"></i></div>' +
+        '<pre class="text"></pre>' +
+        '<div class="part-foot"><button class="btn primary">Копировать</button>' +
+        '<span class="copied">Скопировано</span></div>';
+      el.querySelector("pre").innerHTML = part.html;
+      el.querySelector("button").addEventListener("click", function () {
+        copy(part.md, part.html, el.querySelector(".copied"));
+      });
+      host.appendChild(el);
+    });
+  }
+
+  /* В буфер кладём оба формата: Telegram Desktop возьмёт html и вставит
+     готовый жирный, остальные клиенты возьмут текст с **звёздочками**
+     и сделают жирным при отправке. */
+  function copy(text, html, badge) {
+    var done = function () {
+      if (!badge) return;
+      badge.classList.add("on");
+      setTimeout(function () { badge.classList.remove("on"); }, 1400);
+    };
+    if (html && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      var item = new ClipboardItem({
+        "text/html": new Blob(["<div>" + html.replace(/\n/g, "<br>") + "</div>"], { type: "text/html" }),
+        "text/plain": new Blob([text], { type: "text/plain" })
+      });
+      navigator.clipboard.write([item]).then(done, function () { copyRich(text, html, done); });
+      return;
+    }
+    copyRich(text, html, done);
+  }
+
+  function copyRich(text, html, done) {
+    if (!html) { fallback(text, done); return; }
+    var box = document.createElement("div");
+    box.contentEditable = "true";
+    box.innerHTML = html.replace(/\n/g, "<br>");
+    box.style.cssText = "position:fixed;top:-2000px;left:0;white-space:pre-wrap;opacity:0";
+    document.body.appendChild(box);
+    var sel = window.getSelection(), range = document.createRange();
+    range.selectNodeContents(box);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    sel.removeAllRanges();
+    document.body.removeChild(box);
+    if (ok) done(); else fallback(text, done);
+  }
+
+  function fallback(text, done) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  function grow(ta) {
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
+  }
+
+  function renderLedger() {
+    var host = $("ledger");
+    var done = 0, wip = 0;
+    state.tasks.forEach(function (t) { if (t.status === "done") done++; else wip++; });
+    $("cnt-done").textContent = done;
+    $("cnt-wip").textContent = wip;
+
+    host.innerHTML = "";
+    if (!state.tasks.length) {
+      host.innerHTML = '<div class="panel"><div class="empty">Пока пусто. ' +
+                       'Нажмите «+ Задача» наверху.</div></div>';
+      return;
+    }
+
+    screenSections().forEach(function (s) {
+      var rows = state.tasks.filter(function (t) {
+        return t.status === s.status && !!t.repeat === s.repeat;
+      });
+      if (prefs.hideEmpty && !rows.length) return;
+
+      var key = keyOf(s);
+      var folded = !!prefs.folded[key];
+      var sect = document.createElement("div");
+      sect.className = "sect " + (s.status === "done" ? "s-done" : "s-wip") +
+                       (s.repeat ? " s-rep" : "") + (folded ? " folded" : "");
+      var shown = rows.filter(visible).length;
+
+      var head = document.createElement("div");
+      head.className = "sect-head";
+      head.setAttribute("role", "button");
+      head.setAttribute("tabindex", "0");
+      head.setAttribute("aria-expanded", folded ? "false" : "true");
+      head.title = folded ? "Развернуть раздел" : "Свернуть раздел";
+      head.innerHTML =
+        '<span class="fold">▶</span>' +
+        "<h3>" + (s.status === "done" ? "Готово" : "В процессе") + "</h3>" +
+        (s.repeat ? '<span class="rep">🔄 регулярные</span>' : '<span class="rep">разовые</span>') +
+        '<span class="n">' + (shown === rows.length ? rows.length : shown + " из " + rows.length) + "</span>";
+      var toggle = function () {
+        prefs.folded[key] = !prefs.folded[key];
+        savePrefs();
+        renderLedger();
+      };
+      head.addEventListener("click", toggle);
+      head.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+      sect.appendChild(head);
+
+      if (!folded) {
+        rows.forEach(function (t, i) { sect.appendChild(taskRow(t, i + 1)); });
+        var foot = document.createElement("div");
+        foot.className = "sect-foot";
+        foot.appendChild(addButton(s));
+        sect.appendChild(foot);
+      }
+      host.appendChild(sect);
+    });
+  }
+
+  function segValue(id) {
+    var on = document.querySelector("#" + id + ' button[aria-pressed="true"]');
+    return on ? on.dataset.v : "";
+  }
+
+  function segSet(id, value) {
+    document.querySelectorAll("#" + id + " button").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.v === value ? "true" : "false");
+    });
+  }
+
+  function initSeg(id) {
+    document.querySelectorAll("#" + id + " button").forEach(function (b) {
+      b.addEventListener("click", function () { segSet(id, b.dataset.v); });
+    });
+  }
+
+  /* Диалог создания. Раздел не угадывается — статус и регулярность
+     выбирает автор, поэтому задача сразу попадает куда нужно. */
+  function openTaskDialog(preset) {
+    var dlg = $("dlg-task");
+    $("nt-text").value = "";
+    $("nt-comment").value = "";
+    $("nt-due").value = "";
+    $("nt-dates").value = "";
+    $("nt-did").value = "";
+    $("nt-ltext").value = "";
+    $("nt-link").value = "";
+    $("nt-err").hidden = true;
+    segSet("nt-who", (preset && preset.who) || "Р");
+    segSet("nt-status", preset ? preset.status : "wip");
+    $("nt-rep").checked = preset ? !!preset.repeat : false;
+    dlg.showModal();
+    $("nt-text").focus();
+  }
+
+  function commitTaskDialog() {
+    var text = $("nt-text").value.replace(/\s*\n\s*/g, " ").trim();
+    if (!text) {
+      $("nt-err").hidden = false;
+      $("nt-text").focus();
+      return;
+    }
+    var t = {
+      id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      text: text,
+      who: segValue("nt-who") || "Р",
+      status: segValue("nt-status") === "done" ? "done" : "wip",
+      repeat: $("nt-rep").checked,
+      due: $("nt-due").value.trim(),
+      dates: $("nt-dates").value.trim(),
+      did: $("nt-did").value.trim(),
+      comment: $("nt-comment").value.trim(),
+      link: $("nt-link").value.trim(),
+      linkText: $("nt-ltext").value.trim()
+    };
+    // в начало своего раздела — там её сразу видно
+    var at = -1;
+    for (var i = 0; i < state.tasks.length; i++) {
+      var x = state.tasks[i];
+      if (x.status === t.status && !!x.repeat === !!t.repeat) { at = i; break; }
+    }
+    if (at >= 0) state.tasks.splice(at, 0, t); else state.tasks.push(t);
+
+    var key = t.status + (t.repeat ? "*" : "");
+    if (prefs.folded[key]) { prefs.folded[key] = false; savePrefs(); }
+
+    $("dlg-task").close();
+    save();
+    renderAll();
+    var row = document.querySelector('[data-id="' + t.id + '"]');
+    if (!row) return;
+    row.classList.add("just-added");
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  function addButton(s) {
+    var b = document.createElement("button");
+    b.className = "btn ghost";
+    b.textContent = "+ Задача";
+    b.addEventListener("click", function () { openTaskDialog(s); });
+    return b;
+  }
+
+  function taskRow(t, num) {
+    var row = document.createElement("div");
+    row.className = "row" + (visible(t) ? "" : " hidden");
+    row.dataset.id = t.id;
+
+    var n = document.createElement("div");
+    n.className = "num";
+    n.textContent = num + ".";
+    row.appendChild(n);
+
+    var marks = document.createElement("div");
+    marks.className = "marks";
+
+    var who = document.createElement("button");
+    who.className = "mk who";
+    who.textContent = t.who;
+    who.title = GROUP_NAMES[t.who] || "Группа компаний";
+    who.addEventListener("click", function () {
+      var i = GROUPS.indexOf(t.who);
+      t.who = GROUPS[(i + 1) % GROUPS.length];
+      who.textContent = t.who;
+      who.title = GROUP_NAMES[t.who] || "Группа компаний";
+      save();
+      if (filterWho) renderLedger(); else renderParts();
+    });
+    marks.appendChild(who);
+
+    var st = document.createElement("button");
+    st.className = "mk st " + (t.status === "done" ? "d" : "w");
+    st.textContent = t.status === "done" ? "🟢" : "🟠";
+    st.title = "Готово / В процессе";
+    st.addEventListener("click", function () {
+      t.status = t.status === "done" ? "wip" : "done";
+      save(); renderAll();
+    });
+    marks.appendChild(st);
+
+    var rep = document.createElement("button");
+    rep.className = "mk rep";
+    rep.textContent = "🔄";
+    rep.setAttribute("aria-pressed", t.repeat ? "true" : "false");
+    rep.title = "Регулярная задача";
+    rep.addEventListener("click", function () {
+      t.repeat = !t.repeat;
+      save(); renderAll();
+    });
+    marks.appendChild(rep);
+    row.appendChild(marks);
+
+    var body = document.createElement("div");
+    body.className = "body";
+
+    var ta = document.createElement("textarea");
+    ta.className = "txt";
+    ta.rows = 1;
+    ta.value = t.text;
+    ta.placeholder = "Что за задача";
+    ta.addEventListener("input", function () {
+      t.text = ta.value.replace(/\s*\n\s*/g, " ");
+      grow(ta);
+      save(); renderParts();
+    });
+    ta.addEventListener("blur", function () {
+      if (ta.value !== t.text) { ta.value = t.text; grow(ta); }
+    });
+    ta.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); ta.blur(); }
+    });
+    body.appendChild(ta);
+
+    if (t.comment || openComment[t.id]) {
+      var cm = document.createElement("textarea");
+      cm.className = "cmt";
+      cm.rows = 1;
+      cm.value = t.comment;
+      cm.placeholder = "Комментарий — уйдёт в скобках после названия";
+      cm.setAttribute("aria-label", "Комментарий");
+      cm.addEventListener("input", function () {
+        t.comment = cm.value.replace(/\s*\n\s*/g, " ");
+        grow(cm);
+        save(); renderParts();
+      });
+      cm.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); cm.blur(); }
+      });
+      cm.addEventListener("blur", function () {
+        if (!cm.value.trim()) { delete openComment[t.id]; t.comment = ""; save(); renderLedger(); }
+      });
+      body.appendChild(cm);
+      requestAnimationFrame(function () { grow(cm); });
+    }
+
+    var chips = document.createElement("div");
+    chips.className = "chips";
+    var toggleDates = function () {
+      openDates[t.id] = !openDates[t.id];
+      renderLedger();
+      var f = document.querySelector('[data-id="' + t.id + '"] .dates input');
+      if (f) f.focus();
+    };
+    if (t.due) chips.appendChild(dateChip("📆 " + t.due, toggleDates));
+    if (t.dates) chips.appendChild(dateChip("↔️ " + t.dates, toggleDates));
+    if (t.did) chips.appendChild(dateChip("✅ " + t.did, toggleDates, "done"));
+    if (t.link) chips.appendChild(dateChip("🔗 " + (t.linkText || "ссылка"), toggleDates, "link"));
+    var addDate = document.createElement("button");
+    addDate.className = "chip add";
+    addDate.textContent = (t.due || t.dates || t.did || t.link) ? "изменить детали" : "+ даты и ссылка";
+    addDate.addEventListener("click", toggleDates);
+    chips.appendChild(addDate);
+
+    if (!t.comment && !openComment[t.id]) {
+      var addCmt = document.createElement("button");
+      addCmt.className = "chip add";
+      addCmt.textContent = "+ комментарий";
+      addCmt.addEventListener("click", function () {
+        openComment[t.id] = true;
+        renderLedger();
+        var f = document.querySelector('[data-id="' + t.id + '"] .cmt');
+        if (f) f.focus();
+      });
+      chips.appendChild(addCmt);
+    }
+    body.appendChild(chips);
+
+    if (openDates[t.id]) {
+      var d = document.createElement("div");
+      d.className = "dates";
+      d.appendChild(dateField("📆 Выполнить до", t, "due", "7.09  или  9.09; 16.09"));
+      d.appendChild(dateField("↔️ В эти даты", t, "dates", "25.09-28.09"));
+      d.appendChild(didField(t));
+      d.appendChild(linkFields(t));
+      body.appendChild(d);
+    }
+    row.appendChild(body);
+
+    var acts = document.createElement("div");
+    if (confirmDel[t.id]) {
+      acts.className = "confirm";
+      acts.innerHTML = "<span>Удалить?</span>";
+      var yes = document.createElement("button");
+      yes.className = "yes";
+      yes.textContent = "Да";
+      yes.addEventListener("click", function () {
+        state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
+        delete confirmDel[t.id];
+        save(); renderAll();
+      });
+      var no = document.createElement("button");
+      no.textContent = "Нет";
+      no.addEventListener("click", function () { delete confirmDel[t.id]; renderLedger(); });
+      acts.appendChild(yes);
+      acts.appendChild(no);
+    } else {
+      acts.className = "acts";
+      var more = actBtn("⋯", "Даты, ссылка, комментарий", function () {
+        var on = !(openDates[t.id] && openComment[t.id]);
+        openDates[t.id] = on;
+        openComment[t.id] = on;
+        renderLedger();
+      });
+      more.className = "more";
+      acts.appendChild(more);
+      acts.appendChild(actBtn("↑", "Выше", function () { move(t, -1); }));
+      acts.appendChild(actBtn("↓", "Ниже", function () { move(t, 1); }));
+      var del = actBtn("✕", "Удалить", function () { confirmDel[t.id] = true; renderLedger(); });
+      del.className = "del";
+      acts.appendChild(del);
+    }
+    row.appendChild(acts);
+
+    requestAnimationFrame(function () { grow(ta); });
+    return row;
+  }
+
+  function actBtn(label, title, fn) {
+    var b = document.createElement("button");
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  function dateChip(label, onClick, kind) {
+    var c = document.createElement("button");
+    c.className = "chip" + (kind ? " " + kind : "");
+    c.textContent = label;
+    c.title = "Изменить даты";
+    c.addEventListener("click", onClick);
+    return c;
+  }
+
+  /* Ссылка: в сообщение уходит только подпись, кликабельная. Адрес не
+     занимает места в лимите — экономит около полусотни символов на штуку. */
+  function linkFields(t) {
+    var w = document.createElement("div");
+    w.className = "f wide link-f";
+
+    var lt = document.createElement("label");
+    lt.textContent = "🔗 Подпись";
+    lt.setAttribute("for", "l-txt-" + t.id);
+    var txt = document.createElement("input");
+    txt.type = "text";
+    txt.id = "l-txt-" + t.id;
+    txt.value = t.linkText;
+    txt.placeholder = "Заявка в ТП";
+    txt.addEventListener("input", function () {
+      t.linkText = txt.value.trim(); save(); renderParts();
+    });
+
+    var lu = document.createElement("label");
+    lu.textContent = "адрес";
+    lu.setAttribute("for", "l-url-" + t.id);
+    var url = document.createElement("input");
+    url.type = "url";
+    url.id = "l-url-" + t.id;
+    url.className = "url";
+    url.value = t.link;
+    url.placeholder = "https://crm.fcb.expert/...";
+    url.addEventListener("input", function () {
+      t.link = url.value.trim(); save(); renderParts();
+    });
+    url.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
+    });
+
+    w.appendChild(lt); w.appendChild(txt);
+    w.appendChild(lu); w.appendChild(url);
+    return w;
+  }
+
+  /* Даты, когда задача фактически выполнялась. В сообщении они уходят
+     в скобки после текста: «Проверка работы СМС-Банан (2.09 4.09)». */
+  function didField(t) {
+    var w = document.createElement("div");
+    w.className = "f wide";
+    var fid = "d-did-" + t.id;
+    var l = document.createElement("label");
+    l.textContent = "✅ Выполнено";
+    l.setAttribute("for", fid);
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = fid;
+    inp.value = t.did;
+    inp.placeholder = "2.09, 4.09 — каждый раз, когда выполняли";
+    inp.addEventListener("input", function () { t.did = inp.value.trim(); save(); renderParts(); });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
+    });
+    var today = document.createElement("button");
+    today.type = "button";
+    today.className = "chip add today";
+    today.textContent = "+ сегодня";
+    today.title = "Дописать сегодняшнюю дату";
+    today.addEventListener("click", function () {
+      var n = new Date();
+      var stamp = n.getDate() + "." + (n.getMonth() + 1 < 10 ? "0" : "") + (n.getMonth() + 1);
+      var have = t.did ? t.did.split(/[\s,;]+/).filter(Boolean) : [];
+      if (have.indexOf(stamp) === -1) have.push(stamp);
+      t.did = have.join(", ");
+      inp.value = t.did;
+      save(); renderParts();
+    });
+    w.appendChild(l);
+    w.appendChild(inp);
+    w.appendChild(today);
+    return w;
+  }
+
+  function dateField(label, t, field, ph) {
+    var w = document.createElement("div");
+    w.className = "f";
+    var fid = "d-" + field + "-" + t.id;
+    var l = document.createElement("label");
+    l.textContent = label;
+    l.setAttribute("for", fid);
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = fid;
+    inp.value = t[field];
+    inp.placeholder = ph;
+    inp.addEventListener("input", function () { t[field] = inp.value.trim(); save(); renderParts(); });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
+    });
+    w.appendChild(l);
+    w.appendChild(inp);
+    return w;
+  }
+
+  /* соседи внутри одного раздела — порядок в отчёте меняется только там */
+  function move(t, dir) {
+    var peers = state.tasks.filter(function (x) {
+      return x.status === t.status && !!x.repeat === !!t.repeat;
+    });
+    var pos = peers.indexOf(t);
+    var swap = peers[pos + dir];
+    if (!swap) return;
+    var a = state.tasks.indexOf(t), b = state.tasks.indexOf(swap);
+    state.tasks[a] = swap;
+    state.tasks[b] = t;
+    save();
+    renderAll();
+  }
+
+  /* ------------------------------------------------ месяцы */
+
+  /* Даты вида 25.09 переезжают на новый месяц; чужие месяцы не трогаем. */
+  function shiftMonth(s, oldMM, newMM) {
+    if (!s || !oldMM || oldMM === newMM) return s;
+    return s.replace(/(\d{1,2})\.(\d{2})/g, function (m, d, mm) {
+      return mm === oldMM ? d + "." + newMM : m;
+    });
+  }
+
+  /* Конец месяца: регулярные задачи выполнялись весь месяц, их место —
+     в «Готово». Разовые остаются как есть, их решает автор отчёта. */
+  function closeMonthDialog() {
+    var pending = state.tasks.filter(function (t) { return t.repeat && t.status === "wip"; });
+    var dlg = $("dlg-confirm");
+    $("cf-title").textContent = "Закрыть месяц?";
+    $("cf-text").textContent = pending.length
+      ? "Регулярные задачи (" + pending.length + " шт.) перейдут в «Готово». " +
+        "Разовые останутся как есть — их переводите вручную."
+      : "Все регулярные задачи уже в «Готово». Менять нечего.";
+    var ok = dlg.querySelector('button[value="ok"]');
+    ok.textContent = "Перевести";
+    ok.disabled = pending.length === 0;
+    dlg.returnValue = "";
+    dlg.showModal();
+    dlg.addEventListener("close", function handler() {
+      dlg.removeEventListener("close", handler);
+      ok.textContent = "Удалить";
+      ok.disabled = false;
+      if (dlg.returnValue !== "ok" || !pending.length) return;
+      pending.forEach(function (t) { t.status = "done"; });
+      save(); renderAll();
+    });
+  }
+
+  function newMonthDialog() {
+    var sel = $("nm-month");
+    if (!sel.options.length) {
+      MONTHS.forEach(function (m, i) {
+        var o = document.createElement("option");
+        o.value = String(i); o.textContent = m;
+        sel.appendChild(o);
+      });
+    }
+    var now = new Date();
+    var next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    sel.value = String(next.getMonth());
+    $("nm-year").value = String(next.getFullYear());
+    var dlg = $("dlg-month");
+    dlg.returnValue = "";
+    dlg.showModal();
+    dlg.addEventListener("close", function handler() {
+      dlg.removeEventListener("close", handler);
+      if (dlg.returnValue !== "ok") return;
+      var mi = parseInt(sel.value, 10);
+      var yr = ($("nm-year").value || "").replace(/\D/g, "") || String(next.getFullYear());
+      var id = yr + "-" + (mi + 1 < 10 ? "0" : "") + (mi + 1);
+      var name = MONTHS[mi] + " " + yr;
+      if (months.some(function (m) { return m.id === id; })) {
+        $("month").value = id;
+        loadMonth(id);
+        return;
+      }
+      var takeOpen = $("nm-carry").checked, takeRepeat = $("nm-repeat").checked;
+      var oldMM = (state.docId.split("-")[1] || "");
+      var newMM = (mi + 1 < 10 ? "0" : "") + (mi + 1);
+      var shift = $("nm-shift").checked
+        ? function (s) { return shiftMonth(s, oldMM, newMM); }
+        : function (s) { return s; };
+
+      var carried = state.tasks.filter(function (t) {
+        return t.repeat ? takeRepeat : (takeOpen && t.status === "wip");
+      }).map(function (t) {
+        return {
+          id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          text: t.text, who: t.who, status: "wip", repeat: !!t.repeat,
+          due: shift(t.due || ""), dates: shift(t.dates || ""),
+          did: "", comment: t.comment || "",
+          link: t.link || "", linkText: t.linkText || ""
+        };
+      });
+      var body = { month: name, tasks: carried, updated: new Date().toISOString() };
+      var after = function () {
+        months.unshift({ id: id, month: name });
+        months.sort(function (a, b) { return a.id < b.id ? 1 : -1; });
+        fillMonthSelect(id);
+        loadMonth(id);
+      };
+      if (db) {
+        db.doc("reports/" + id).set(body).then(after, function (e) {
+          markSaved("Месяц не создан: " + (e && e.message ? e.message : "ошибка хранилища"), true);
+        });
+      } else {
+        try { localStorage.setItem("tg-report:" + id, JSON.stringify(body)); } catch (e) {}
+        after();
+      }
+    });
+  }
+
+  function deleteMonthDialog() {
+    if (months.length < 2) return;
+    var dlg = $("dlg-confirm");
+    $("cf-title").textContent = "Удалить месяц?";
+    $("cf-text").textContent = "«" + state.month + "» и все его задачи (" +
+      state.tasks.length + " шт.) будут удалены без возможности вернуть.";
+    dlg.returnValue = "";
+    dlg.showModal();
+    dlg.addEventListener("close", function handler() {
+      dlg.removeEventListener("close", handler);
+      if (dlg.returnValue !== "ok") return;
+      var gone = state.docId;
+      var after = function () {
+        months = months.filter(function (m) { return m.id !== gone; });
+        fillMonthSelect(months[0].id);
+        loadMonth(months[0].id);
+      };
+      if (db) {
+        db.doc("reports/" + gone).delete().then(after, function () { markSaved("Не удалось удалить месяц.", true); });
+      } else {
+        try { localStorage.removeItem("tg-report:" + gone); } catch (e) {}
+        after();
+      }
+    });
+  }
+
+  /* ------------------------------------------------ старт */
+  document.querySelectorAll(".filters button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      filterWho = b.dataset.who;
+      document.querySelectorAll(".filters button").forEach(function (x) {
+        x.setAttribute("aria-pressed", x === b ? "true" : "false");
+      });
+      renderLedger();
+    });
+  });
+  $("search").addEventListener("input", function (e) {
+    query = e.target.value.trim().toLowerCase();
+    renderLedger();
+  });
+  $("month").addEventListener("change", function (e) { loadMonth(e.target.value); });
+  initSeg("nt-who");
+  initSeg("nt-status");
+  initSeg("pf-order");
+  $("add-top").addEventListener("click", function () { openTaskDialog(null); });
+  $("nt-ok").addEventListener("click", commitTaskDialog);
+  $("nt-cancel").addEventListener("click", function () { $("dlg-task").close(); });
+  $("nt-text").addEventListener("input", function () { $("nt-err").hidden = true; });
+  $("dlg-task").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && e.target.tagName !== "BUTTON") {
+      e.preventDefault();
+      commitTaskDialog();
+    }
+  });
+
+  $("prefs").addEventListener("click", function () {
+    segSet("pf-order", prefs.order);
+    $("pf-hide-empty").checked = prefs.hideEmpty;
+    $("pf-fold-done").checked = !!(prefs.folded["done"] && prefs.folded["done*"]);
+    $("dlg-prefs").showModal();
+  });
+  $("pf-ok").addEventListener("click", function () {
+    prefs.order = segValue("pf-order") === "report" ? "report" : "todo";
+    prefs.hideEmpty = $("pf-hide-empty").checked;
+    prefs.folded["done"] = prefs.folded["done*"] = $("pf-fold-done").checked;
+    savePrefs();
+    $("dlg-prefs").close();
+    renderLedger();
+  });
+  $("close-month").addEventListener("click", closeMonthDialog);
+  $("new-month").addEventListener("click", newMonthDialog);
+  $("bold-toggle").checked = bold;
+  $("bold-toggle").addEventListener("change", function (e) {
+    bold = e.target.checked;
+    try { localStorage.setItem("tg-report:bold", bold ? "1" : "0"); } catch (err) {}
+    $("bold-note").hidden = !bold;
+    renderParts();
+  });
+  $("bold-note").hidden = !bold;
+  $("del-month").addEventListener("click", deleteMonthDialog);
+  $("copy-src").addEventListener("click", function () {
+    copy(asSource(state.month || "Отчёт", state.tasks), null, null);
+    var b = $("copy-src");
+    var old = b.textContent;
+    b.textContent = "Скопировано";
+    setTimeout(function () { b.textContent = old; }, 1400);
+  });
+
+  function fallbackMonthId() {
+    var now = new Date();
+    return now.getFullYear() + "-" + (now.getMonth() + 1 < 10 ? "0" : "") + (now.getMonth() + 1);
+  }
+
+  /* ---------------- хранилище: JSON-файлы в приватном репозитории GitHub ---------------- */
+  var GH_API = "https://api.github.com";
+  var GH_ACCEPT = "application/vnd.github+json";
+  var GH_REPO_KEY = "tg-report:gh-repo";
+  var GH_TOKEN_KEY = "tg-report:gh-token";
+  var GH_DIR = "data";
+  var GH_POLL_MS = 5000;
+
+  function ghCfg() {
+    var repo = "", token = "";
+    try {
+      repo = localStorage.getItem(GH_REPO_KEY) || "";
+      token = localStorage.getItem(GH_TOKEN_KEY) || "";
+    } catch (e) {}
+    if (!repo) {
+      repo = window.prompt("Репозиторий GitHub для данных, вида логин/fcbreport-data:", "") || "";
+      repo = repo.trim().replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, "");
+      try { if (repo) localStorage.setItem(GH_REPO_KEY, repo); } catch (e) {}
+    }
+    if (!token) {
+      token = window.prompt("Токен GitHub (Settings → Developer settings → Personal access tokens):", "") || "";
+      token = token.trim();
+      try { if (token) localStorage.setItem(GH_TOKEN_KEY, token); } catch (e) {}
+    }
+    return { repo: repo, token: token };
+  }
+
+  function b64enc(str) {
+    var bytes = new TextEncoder().encode(str), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function b64dec(b64) {
+    var bin = atob(String(b64 || "").replace(/\s/g, ""));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function ghSend(url, method, payload) {
+    var headers = {
+      "Authorization": "Bearer " + ghCfg().token,
+      "Accept": GH_ACCEPT,
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+    var init = { method: method, cache: "no-store", headers: headers };
+    if (payload !== undefined) {
+      headers["Content-Type"] = "application/json";
+      init.body = typeof payload === "string" ? payload : JSON.stringify(payload);
+    }
+    return fetch(url, init);
+  }
+
+  function ghDiag(text) {
+    try {
+      var el = document.getElementById("gh-diag");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "gh-diag";
+        el.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7a1f1f;color:#fff;font:12px/1.45 monospace;padding:10px 14px;max-height:45vh;overflow:auto;white-space:pre-wrap;box-shadow:0 -2px 12px rgba(0,0,0,.4)";
+        document.body.appendChild(el);
+      }
+      el.textContent = (el.textContent ? el.textContent + "\n" : "Диагностика GitHub: ") + text;
+    } catch (e) {}
+  }
+
+  function ghRequest(path, opts) {
+    var cfg = ghCfg();
+    if (!cfg.repo || !cfg.token) {
+      return Promise.reject(new Error("не указан репозиторий или токен"));
+    }
+    opts = opts || {};
+    var url = GH_API + "/repos/" + cfg.repo + "/" + path;
+    var method = opts.method || "GET";
+
+    return ghSend(url, method, opts.body).then(function (r) {
+      if (r.status === 404 && method === "GET") { ghDiag("404 на " + path); return null; }
+      if (r.status === 204) return {};
+      return r.text().then(function (txt) {
+        var data = null;
+        try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = null; }
+        if (r.status === 401) {
+          try { localStorage.removeItem(GH_TOKEN_KEY); } catch (e) {}
+          throw new Error("GitHub не принял токен (401) — обновите страницу и введите токен заново");
+        }
+        if (r.status === 403) throw new Error("GitHub отказал (403): проверьте права токена (Contents: Read and write) и лимит запросов");
+        if (r.status === 409 || r.status === 422) {
+          var err = new Error("конфликт версий на сервере");
+          err.conflict = true;
+          throw err;
+        }
+        if (!r.ok) {
+          ghDiag("HTTP " + r.status + " на " + path + "\n" + (txt || "").slice(0, 500));
+          throw new Error("GitHub: HTTP " + r.status + (txt ? " — " + txt.slice(0, 300) : ""));
+        }
+        return data;
+      });
+    });
+  }
+
+  function ghFileDoc(meta) {
+    if (!meta) return null;
+    var body = null;
+    if (typeof meta.content === "string" && meta.content) {
+      try { body = JSON.parse(b64dec(meta.content)); } catch (e) {
+        try { body = JSON.parse(meta.content); } catch (e2) { body = null; }
+      }
+    } else if (meta.raw) {
+      try { body = JSON.parse(meta.raw); } catch (e) { body = null; }
+    } else if (meta.text) {
+      try { body = JSON.parse(meta.text); } catch (e) { body = null; }
+    }
+    return body;
+  }
+
+  function ghDoc(id) {
+    var short = String(id).replace(/^reports\//, "");
+    var file = GH_DIR + "/" + short + ".json";
+    var subs = [], timer = null, lastSha = null, lastSnap = null, busy = false;
+
+    function emit(snap) {
+      subs.slice().forEach(function (cb) { try { cb(snap); } catch (e) {} });
+    }
+
+    function snapOf(meta) {
+      var body = ghFileDoc(meta) || {};
+      var data = {
+        month: body.month || short,
+        tasks: Array.isArray(body.tasks) ? body.tasks : []
+      };
+      return { exists: !!meta, metadata: { hasPendingWrites: false }, data: function () { return data; } };
+    }
+
+    function poll() {
+      if (busy) return;
+      busy = true;
+      ghRequest("contents/" + file).then(function (meta) {
+        busy = false;
+        var sha = meta && (meta.sha || meta.id || meta.blob_id) ? (meta.sha || meta.id || meta.blob_id) : null;
+        if (sha === lastSha) return;
+        lastSha = sha;
+        lastSnap = snapOf(meta);
+        emit(lastSnap);
+      }).catch(function () { busy = false; });
+    }
+
+    function put(payload, sha) {
+      var body = {
+        message: "Реестр " + short + ": " + new Date().toISOString(),
+        content: b64enc(JSON.stringify(payload, null, 2))
+      };
+      if (sha) body.sha = sha;
+      return ghRequest("contents/" + file, { method: "PUT", body: body }).then(function (res) {
+        var newSha = null;
+        if (res) {
+          if (res.content && (res.content.sha || res.content.id)) newSha = res.content.sha || res.content.id;
+          else if (res.sha || res.id) newSha = res.sha || res.id;
+        }
+        lastSha = newSha;
+        lastSnap = { exists: true, metadata: { hasPendingWrites: false }, data: function () { return { month: payload.month, tasks: payload.tasks }; } };
+        return {};
+      });
+    }
+
+    return {
+      set: function (body) {
+        var payload = { month: body.month, tasks: body.tasks, updated: new Date().toISOString() };
+        var first = lastSha
+          ? Promise.resolve(lastSha)
+          : ghRequest("contents/" + file).then(function (meta) { return meta ? (meta.sha || meta.id || meta.blob_id || null) : null; });
+        return first.then(function (sha) { return put(payload, sha); }).catch(function (e) {
+          if (e && e.conflict) throw new Error("версия на сервере новее, обновите страницу");
+          throw e;
+        });
+      },
+      delete: function () {
+        var first = lastSha
+          ? Promise.resolve(lastSha)
+          : ghRequest("contents/" + file).then(function (meta) { return meta ? (meta.sha || meta.id || meta.blob_id || null) : null; });
+        return first.then(function (sha) {
+          if (!sha) { lastSha = null; return {}; }
+          return ghRequest("contents/" + file, {
+            method: "DELETE",
+            body: { message: "Реестр " + short + ": месяц удалён", sha: sha }
+          }).then(function () {
+            lastSha = null;
+            lastSnap = { exists: false, metadata: { hasPendingWrites: false }, data: function () { return { month: short, tasks: [] }; } };
+            return {};
+          });
+        });
+      },
+      onSnapshot: function (cb) {
+        subs.push(cb);
+        if (!timer) timer = setInterval(poll, GH_POLL_MS);
+        if (lastSnap) setTimeout(function () { try { cb(lastSnap); } catch (e) {} }, 0);
+        else setTimeout(poll, 50);
+        return function () {
+          subs = subs.filter(function (f) { return f !== cb; });
+          if (!subs.length && timer) { clearInterval(timer); timer = null; }
+        };
+      }
+    };
+  }
+
+  function ghMonthName(id) {
+    var m = /^(\d{4})-(\d{2})$/.exec(id);
+    if (!m) return id;
+    var idx = parseInt(m[2], 10) - 1;
+    var name = (typeof MONTHS !== "undefined" && MONTHS[idx]) ? MONTHS[idx] : m[2];
+    return name + " " + m[1];
+  }
+
+  function ghCollection() {
+    function toItems(res) {
+      if (Array.isArray(res)) return res;
+      if (!res) return [];
+      var keys = ["items", "files", "entries", "children", "content", "data", "tree"];
+      for (var i = 0; i < keys.length; i++) {
+        if (Array.isArray(res[keys[i]])) return res[keys[i]];
+      }
+      return [];
+    }
+    function nameOf(it) {
+      if (!it) return "";
+      if (typeof it.name === "string") return it.name;
+      if (typeof it.path === "string") return it.path.split("/").pop();
+      if (typeof it.file_name === "string") return it.file_name;
+      return "";
+    }
+    function docsFrom(items) {
+      return items
+        .filter(function (it) { return /^\d{4}-\d{2}\.json$/.test(nameOf(it)); })
+        .map(function (it) {
+          var id = nameOf(it).replace(/\.json$/, "");
+          return { id: id, data: function () { return { month: ghMonthName(id) }; } };
+        })
+        .sort(function (a, b) { return a.id < b.id ? 1 : -1; });
+    }
+    return {
+      get: function () {
+        return ghRequest("contents/" + GH_DIR).then(function (res) {
+          var docs = docsFrom(toItems(res));
+          if (docs.length) return { docs: docs };
+          return ghRequest("contents/" + GH_DIR + "/").then(function (res2) {
+            docs = docsFrom(toItems(res2));
+            if (docs.length) return { docs: docs };
+            return ghRequest("contents").then(function (root) {
+              ghDiag("data не найдена.\ndata: " + JSON.stringify(res).slice(0, 220) +
+                "\ndata/: " + JSON.stringify(res2).slice(0, 220) +
+                "\nкорень: " + JSON.stringify(root).slice(0, 400));
+              return { docs: [] };
+            }).catch(function () {
+              ghDiag("папка data в репозитории не найдена — создайте её и загрузите файлы месяцев");
+              return { docs: [] };
+            });
+          });
+        }).catch(function (e) {
+          ghDiag(e && e.message ? e.message : String(e));
+          throw e;
+        });
+      }
+    };
+  }
+  function migrateLocalDocs(api) {
+    var ids = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && /^tg-report:\d{4}-\d{2}$/.test(k)) ids.push(k.slice("tg-report:".length));
+      }
+    } catch (e) { return Promise.resolve(); }
+    if (!ids.length) return Promise.resolve();
+    return api.collection("reports").get().then(function (q) {
+      var have = {};
+      q.docs.forEach(function (d) { have[d.id] = true; });
+      return ids.reduce(function (p, id) {
+        if (have[id]) return p;
+        return p.then(function () {
+          var raw = null, d = null;
+          try { raw = localStorage.getItem("tg-report:" + id); } catch (e) {}
+          if (!raw) return;
+          try { d = JSON.parse(raw); } catch (e) { return; }
+          return api.doc("reports/" + id).set({ month: d.month || id, tasks: d.tasks || [] });
+        });
+      }, Promise.resolve());
+    }).catch(function () {});
+  }
+
+  window.claude = { use: function (name) {
+    if (name !== "db") return Promise.resolve(null);
+    var cfg = ghCfg();
+    if (!cfg.repo || !cfg.token) return Promise.resolve(null);
+    var api = { doc: function (id) { return ghDoc(id); }, collection: function () { return ghCollection(); } };
+    return migrateLocalDocs(api).then(function () { return api; }).catch(function () { return api; });
+  } };
+
+  var connect = (typeof claude !== "undefined" && claude && claude.use)
+    ? claude.use("db")
+    : Promise.resolve(null);
+
+  connect.then(function (store) {
+    db = store;
+    if (!db) {
+      markSaved("Хранилище недоступно — правки сохраняются только в этом браузере. " +
+                "Скопируйте резервную копию <b>tasks.txt</b>, если работаете с другого устройства.", true);
+      var ids = [];
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("tg-report:") === 0) ids.push(k.slice(10));
+        }
+      } catch (e) {}
+      ids.sort().reverse();
+      var pick = ids[0] || fallbackMonthId();
+      months = ids.map(function (id) {
+        var m = id;
+        try { m = JSON.parse(localStorage.getItem("tg-report:" + id)).month || id; } catch (e) {}
+        return { id: id, month: m };
+      });
+      if (!months.length) months = [{ id: pick, month: MONTHS[new Date().getMonth()] + " " + new Date().getFullYear() }];
+      fillMonthSelect(pick);
+      loadMonth(pick);
+      return;
+    }
+    refreshMonths().then(function () {
+      if (!months.length) {
+        var id = fallbackMonthId();
+        months = [{ id: id, month: MONTHS[new Date().getMonth()] + " " + new Date().getFullYear() }];
+        fillMonthSelect(id);
+      }
+      loadMonth($("month").value || months[0].id);
+    }, function (e) {
+      markSaved("Не удалось прочитать список месяцев: " + (e && e.message ? e.message : "ошибка"), true);
+    });
+  });
+})();
+</script>
+
+</body></html>
