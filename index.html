@@ -77,6 +77,10 @@ select.month{font-weight:500}
 .btn[disabled]{opacity:.45; cursor:default}
 .btn[disabled]:hover{background:var(--surface); border-color:var(--line-strong)}
 
+.save-box{display:flex; flex-direction:column; align-items:flex-end; gap:3px}
+.save-state{font-size:11px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums}
+.save-state.dirty{color:var(--wip); font-weight:500}
+
 .tally{display:flex; gap:8px; align-items:center}
 .pill-count{
   display:inline-flex; align-items:baseline; gap:6px; padding:5px 11px; border-radius:999px;
@@ -396,6 +400,10 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
         <label for="month">Месяц</label>
         <select class="month" id="month"></select>
       </div>
+      <div class="save-box">
+        <button class="btn primary" id="save-btn" title="Сохранить изменения (Ctrl+S)" disabled>Сохранить</button>
+        <span class="save-state" id="save-state">изменений нет</span>
+      </div>
       <button class="btn" id="close-month">Закрыть месяц</button>
       <button class="btn" id="new-month">+ Месяц</button>
       <button class="btn ghost" id="del-month" title="Удалить текущий месяц">✕</button>
@@ -588,7 +596,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
   var LEGEND = "Статусы:\n🟢 - Готово\n🟠 - В процессе\n📆 - Выполнить \"До\"\n" +
                "🔄 - Ежедневная / Регулярная задача\n↔️ - Выполнить в эти даты";
 
-  var db = null, unsub = null, saveTimer = null, lastWritten = "";
+  var db = null, unsub = null, dirty = false, saving = false, lastSavedAt = null, lastWritten = "";
   var state = { docId:"", month:"", tasks:[] };
   var months = [];
   var filterWho = "", query = "";
@@ -831,33 +839,82 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
 
   function localKey() { return "tg-report:" + state.docId; }
 
-  function persist() {
-    var body = { month: state.month, tasks: state.tasks, updated: new Date().toISOString() };
-    lastWritten = JSON.stringify({ month: body.month, tasks: body.tasks });
-    if (db) {
-      db.doc("reports/" + state.docId).set(body).catch(function (e) {
-        markSaved("Не удалось сохранить: " + (e && e.message ? e.message : "хранилище недоступно") +
-                  ". Скопируйте резервную копию <b>tasks.txt</b>, чтобы не потерять правки.", true);
-      });
+  function fmtStamp(d) {
+    if (!d || isNaN(d.getTime())) return "";
+    var p = function (n) { return n < 10 ? "0" + n : "" + n; };
+    return p(d.getDate()) + "." + p(d.getMonth() + 1) + "." + d.getFullYear() +
+           ", " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+
+  function renderSaveState() {
+    var b = $("save-btn"), s = $("save-state");
+    if (!b || !s) return;
+    b.disabled = !dirty || saving;
+    if (saving) {
+      s.textContent = "сохраняю…";
+      s.className = "save-state dirty";
+    } else if (dirty) {
+      s.textContent = "не сохранено";
+      s.className = "save-state dirty";
     } else {
-      try { localStorage.setItem(localKey(), JSON.stringify(body)); } catch (e) {}
+      s.textContent = lastSavedAt ? "сохранено " + fmtStamp(lastSavedAt) : "изменений нет";
+      s.className = "save-state";
     }
   }
 
-  function save() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(persist, 350);
+  function hideSavedNotice() {
+    var n = $("notice");
+    if (n && !n.hidden && n.textContent.indexOf("Сохранено") === 0) n.hidden = true;
+  }
+
+  /* Правки копятся в памяти и на сервер сами не уходят:
+     иначе каждый символ перерисовывал поле ввода. */
+  function markDirty() {
+    if (dirty) return;
+    dirty = true;
+    renderSaveState();
+  }
+
+  function persist() {
+    var body = { month: state.month, tasks: state.tasks, updated: new Date().toISOString() };
+    lastWritten = JSON.stringify({ month: body.month, tasks: body.tasks });
+    dirty = false;
+    if (!db) {
+      try { localStorage.setItem(localKey(), JSON.stringify(body)); } catch (e) {}
+      lastSavedAt = new Date(body.updated);
+      renderSaveState();
+      return Promise.resolve();
+    }
+    saving = true;
+    renderSaveState();
+    return db.doc("reports/" + state.docId).set(body).then(function () {
+      saving = false;
+      lastSavedAt = new Date(body.updated);
+      renderSaveState();
+      markSaved("Сохранено " + fmtStamp(lastSavedAt) + " — данные на сервере обновлены.", false);
+      setTimeout(hideSavedNotice, 4000);
+    }).catch(function (e) {
+      saving = false;
+      dirty = true;
+      renderSaveState();
+      markSaved("Не удалось сохранить: " + (e && e.message ? e.message : "хранилище недоступно") +
+                ". Правки остались на экране — скопируйте резервную копию <b>tasks.txt</b>.", true);
+    });
   }
 
   function loadMonth(id) {
     if (unsub) { unsub(); unsub = null; }
     state.docId = id;
+    dirty = false;
+    lastSavedAt = null;
     if (!db) {
       var raw = null;
       try { raw = localStorage.getItem(localKey()); } catch (e) {}
       var d = raw ? JSON.parse(raw) : { month: id, tasks: [] };
       state.month = d.month; state.tasks = thaw(d.tasks);
+      lastSavedAt = d.updated ? new Date(d.updated) : null;
       renderAll();
+      renderSaveState();
       return;
     }
     unsub = db.doc("reports/" + id).onSnapshot(function (snap) {
@@ -865,11 +922,16 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       var d = snap.exists ? snap.data() : { month: id, tasks: [] };
       var incoming = JSON.stringify({ month: d.month || id, tasks: d.tasks || [] });
       if (incoming === lastWritten) return;
+      /* Пока есть несохранённые правки, чужую версию не подсовываем:
+         иначе текст на экране подменяется посреди набора. */
+      if (dirty) return;
       if (document.activeElement && document.activeElement.classList.contains("txt")) return;
       lastWritten = incoming;
       state.month = d.month || id;
       state.tasks = thaw(d.tasks);
+      lastSavedAt = d.updated ? new Date(d.updated) : null;
       renderAll();
+      renderSaveState();
     }, function (e) {
       markSaved("Связь с хранилищем прервалась (" + e.code + "). Обновите страницу.", true);
     });
@@ -1122,7 +1184,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     if (prefs.folded[key]) { prefs.folded[key] = false; savePrefs(); }
 
     $("dlg-task").close();
-    save();
+    markDirty();
     renderAll();
     var row = document.querySelector('[data-id="' + t.id + '"]');
     if (!row) return;
@@ -1160,7 +1222,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       t.who = GROUPS[(i + 1) % GROUPS.length];
       who.textContent = t.who;
       who.title = GROUP_NAMES[t.who] || "Группа компаний";
-      save();
+      markDirty();
       if (filterWho) renderLedger(); else renderParts();
     });
     marks.appendChild(who);
@@ -1171,7 +1233,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     st.title = "Готово / В процессе";
     st.addEventListener("click", function () {
       t.status = t.status === "done" ? "wip" : "done";
-      save(); renderAll();
+      markDirty(); renderAll();
     });
     marks.appendChild(st);
 
@@ -1182,7 +1244,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     rep.title = "Регулярная задача";
     rep.addEventListener("click", function () {
       t.repeat = !t.repeat;
-      save(); renderAll();
+      markDirty(); renderAll();
     });
     marks.appendChild(rep);
     row.appendChild(marks);
@@ -1198,7 +1260,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     ta.addEventListener("input", function () {
       t.text = ta.value.replace(/\s*\n\s*/g, " ");
       grow(ta);
-      save(); renderParts();
+      markDirty(); renderParts();
     });
     ta.addEventListener("blur", function () {
       if (ta.value !== t.text) { ta.value = t.text; grow(ta); }
@@ -1218,13 +1280,13 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       cm.addEventListener("input", function () {
         t.comment = cm.value.replace(/\s*\n\s*/g, " ");
         grow(cm);
-        save(); renderParts();
+        markDirty(); renderParts();
       });
       cm.addEventListener("keydown", function (e) {
         if (e.key === "Enter") { e.preventDefault(); cm.blur(); }
       });
       cm.addEventListener("blur", function () {
-        if (!cm.value.trim()) { delete openComment[t.id]; t.comment = ""; save(); renderLedger(); }
+        if (!cm.value.trim()) { delete openComment[t.id]; t.comment = ""; markDirty(); renderLedger(); }
       });
       body.appendChild(cm);
       requestAnimationFrame(function () { grow(cm); });
@@ -1283,7 +1345,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       yes.addEventListener("click", function () {
         state.tasks = state.tasks.filter(function (x) { return x.id !== t.id; });
         delete confirmDel[t.id];
-        save(); renderAll();
+        markDirty(); renderAll();
       });
       var no = document.createElement("button");
       no.textContent = "Нет";
@@ -1345,7 +1407,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     txt.value = t.linkText;
     txt.placeholder = "Заявка в ТП";
     txt.addEventListener("input", function () {
-      t.linkText = txt.value.trim(); save(); renderParts();
+      t.linkText = txt.value.trim(); markDirty(); renderParts();
     });
 
     var lu = document.createElement("label");
@@ -1358,7 +1420,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     url.value = t.link;
     url.placeholder = "https://crm.fcb.expert/...";
     url.addEventListener("input", function () {
-      t.link = url.value.trim(); save(); renderParts();
+      t.link = url.value.trim(); markDirty(); renderParts();
     });
     url.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
@@ -1383,7 +1445,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     inp.id = fid;
     inp.value = t.did;
     inp.placeholder = "2.09, 4.09 — каждый раз, когда выполняли";
-    inp.addEventListener("input", function () { t.did = inp.value.trim(); save(); renderParts(); });
+    inp.addEventListener("input", function () { t.did = inp.value.trim(); markDirty(); renderParts(); });
     inp.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
     });
@@ -1399,7 +1461,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       if (have.indexOf(stamp) === -1) have.push(stamp);
       t.did = have.join(", ");
       inp.value = t.did;
-      save(); renderParts();
+      markDirty(); renderParts();
     });
     w.appendChild(l);
     w.appendChild(inp);
@@ -1419,7 +1481,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     inp.id = fid;
     inp.value = t[field];
     inp.placeholder = ph;
-    inp.addEventListener("input", function () { t[field] = inp.value.trim(); save(); renderParts(); });
+    inp.addEventListener("input", function () { t[field] = inp.value.trim(); markDirty(); renderParts(); });
     inp.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); openDates[t.id] = false; renderLedger(); }
     });
@@ -1439,7 +1501,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     var a = state.tasks.indexOf(t), b = state.tasks.indexOf(swap);
     state.tasks[a] = swap;
     state.tasks[b] = t;
-    save();
+    markDirty();
     renderAll();
   }
 
@@ -1474,7 +1536,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       ok.disabled = false;
       if (dlg.returnValue !== "ok" || !pending.length) return;
       pending.forEach(function (t) { t.status = "done"; });
-      save(); renderAll();
+      markDirty(); renderAll();
     });
   }
 
@@ -1582,7 +1644,32 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
     query = e.target.value.trim().toLowerCase();
     renderLedger();
   });
-  $("month").addEventListener("change", function (e) { loadMonth(e.target.value); });
+  $("month").addEventListener("change", function (e) {
+    var id = e.target.value;
+    if (id === state.docId) return;
+    if (dirty && !window.confirm("Есть несохранённые правки. Переключить месяц без сохранения?")) {
+      e.target.value = state.docId;
+      return;
+    }
+    loadMonth(id);
+  });
+
+  $("save-btn").addEventListener("click", function () { persist(); });
+
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === "s") {
+      e.preventDefault();
+      if (dirty) persist();
+    }
+  });
+
+  window.addEventListener("beforeunload", function (e) {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+
+  renderSaveState();
   initSeg("nt-who");
   initSeg("nt-status");
   initSeg("pf-order");
@@ -1764,7 +1851,8 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
       var body = ghFileDoc(meta) || {};
       var data = {
         month: body.month || short,
-        tasks: Array.isArray(body.tasks) ? body.tasks : []
+        tasks: Array.isArray(body.tasks) ? body.tasks : [],
+        updated: body.updated || null
       };
       return { exists: !!meta, metadata: { hasPendingWrites: false }, data: function () { return data; } };
     }
@@ -1795,7 +1883,7 @@ textarea.dlg-input{resize:vertical; min-height:52px; line-height:1.45}
           else if (res.sha || res.id) newSha = res.sha || res.id;
         }
         lastSha = newSha;
-        lastSnap = { exists: true, metadata: { hasPendingWrites: false }, data: function () { return { month: payload.month, tasks: payload.tasks }; } };
+        lastSnap = { exists: true, metadata: { hasPendingWrites: false }, data: function () { return { month: payload.month, tasks: payload.tasks, updated: payload.updated }; } };
         return {};
       });
     }
